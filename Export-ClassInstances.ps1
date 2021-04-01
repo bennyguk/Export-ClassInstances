@@ -36,8 +36,8 @@ Param (
 [parameter(HelpMessage="Enter Managment Server Computer Name")]
 [string] $ComputerName = "localhost"
 )
+# Using the Service Manager cmdlets because I could not replicate the functionality of Get-SCSMRelationship in SMLets easily.
 $GetInstallDirectory = Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\System Center\2010\Service Manager\Setup' -Name InstallDirectory
-
 $SMPSModule = $GetInstallDirectory.InstallDirectory + "Powershell\System.Center.Service.Manager.psd1"
 
 Import-Module $SMPSModule
@@ -90,7 +90,7 @@ foreach ($classRelationship in $classRelationships) {
             $csvColumns[$classRelationship] = ""
 }  
 
-# Remove the Service Manager module and import SMLets
+# Remove the Service Manager module and import SMLets for the rest of the script
 Remove-Module System.Center.Service.Manager
 Import-Module SMLets
 
