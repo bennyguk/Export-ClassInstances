@@ -1,3 +1,30 @@
+<#
+.SYNOPSIS
+    A script to export class instance properties (work item or configuration item based classes), all related items properties and file attachments to CSV file.
+.DESCRIPTION
+    This script could be useful if you need to export class instances in bulk for archival purposes, or if you need to make changes to a custom class
+    that are not upgrade compatible for later import with Import-ClassInstances.ps1 (https://github.com/bennyguk/Import-ClassInstances).
+    
+    For more information, please see https://github.com/bennyguk/Export-ClassInstances
+
+.PARAMETER ClassName
+    Specifies the class name you wish to work with.
+
+.PARAMETER FilePath
+    Specifies the path to the folder you wish to export file attachments and CSV file to.
+
+.PARAMETER FileName
+    Specifies name of the CSV file - Will default to Export.csv
+
+.PARAMETER ComputerName
+    Specifies the SCSM server to connect to.
+
+.PARAMETER IncludePendingDelete
+    Will include class instances that have been deleted in the export.
+    
+.EXAMPLE
+    Export-ClassInstances.ps1 -ClassName MyClass -FilePath c:\MyClassExport -FileName MyClassExport.csv -ComputerName MySCSMServer -IncludePendingDelete
+#>
 
 Param (
 [Parameter(mandatory)]
