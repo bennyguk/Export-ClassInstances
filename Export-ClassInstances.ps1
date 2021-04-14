@@ -102,7 +102,7 @@ if($IncludePendingDelete) {
     $classInstances = Get-SCSMObject -Class $Class
 }
 else {
-    $classInstances = Get-SCSMObject -Class $Class | Where-Object {$_.objectstatus -match "Active”}
+    $classInstances = Get-SCSMObject -Class $Class | Where-Object {$_.objectstatus -match "Active"}
 }
 
 # Collect the property names for the class and add to an array
