@@ -115,7 +115,8 @@ $classProperties = $classProperties.Name
 # Get class instance and related item property values and output to a CSV file. Export any attachments to a subdirectory called ExportedAttachments
 foreach ($classInstance in $classInstances) {
         $relationshipDetails = Get-SCSMRelationshipObject -BySource $classInstance
-        .\Get-FileAttachments.ps1 -Id $classInstance.Get_Id() -ArchiveRootPath $FilePath\ExportedAttachments -ComputerName $smdefaultcomputer
+        & $FilePath\Get-FileAttachments.ps1 -Id $classInstance.Get_Id() -ArchiveRootPath $FilePath\ExportedAttachments -ComputerName $smdefaultcomputer
+        }       
         foreach ($Property in $classProperties) {
                 $csvColumns[$Property] = $classInstance.$Property
         }
