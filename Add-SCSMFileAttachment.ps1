@@ -1,9 +1,9 @@
     <#
     .SYNOPSIS
-        Add one or more file attachments to an SCSMObject (WorkItem or ConfirItem)
+        Add one or more file attachments to an SCSMObject (WorkItem or ConfigItem)
 
     .DESCRIPTION
-        Add one or more file attachments to an SCSMObject (WorkItem or ConfirItem)
+        Add one or more file attachments to an SCSMObject (WorkItem or ConfigItem)
 
     .PARAMETER <ParameterName>
         <Parameter Decription>
