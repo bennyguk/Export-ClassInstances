@@ -6,19 +6,14 @@
     that are not upgrade compatible for later import with Import-ClassInstances.ps1 (https://github.com/bennyguk/Import-ClassInstances).
     
     For more information, please see https://github.com/bennyguk/Export-ClassInstances
-
 .PARAMETER ClassName
     Specifies the class name you wish to work with.
-
 .PARAMETER FilePath
     Specifies the path to the folder you wish to export file attachments and CSV file to.
-
 .PARAMETER FileName
     Specifies name of the CSV file - Will default to Export.csv
-
 .PARAMETER ComputerName
     Specifies the SCSM server to connect to.
-
 .PARAMETER IncludePendingDelete
     Will include class instances that have been deleted in the export.
     
@@ -29,9 +24,9 @@ Param (
     [parameter(Mandatory)][string] $ClassName,
     [parameter(Mandatory, HelpMessage = "Enter a path to the exported CSV directory, excluding the filename")][string] $FilePath,
     [string] $FileName = "Export.csv",
-    [Switch] $IncludePendingDelete = $false,
-    [parameter(HelpMessage = "Enter Managment Server Computer Name")]
-    [string] $ComputerName = "localhost"
+    [Switch] $IncludePendingDelete = $False,
+    [parameter(Mandatory, HelpMessage = "Enter Managment Server Computer Name")]
+    [string] $ComputerName
 )
 
 $GetInstallDirectory = Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\System Center\2010\Service Manager\Setup' -Name InstallDirectory
@@ -41,16 +36,10 @@ $SMPSModule = $GetInstallDirectory.InstallDirectory + "Powershell\System.Center.
 Import-Module $SMPSModule
 
 #Set SMDefaultComputer
-If ($ComputerName) { 
-    $SMDefaultComputer = $ComputerName 
-}
-if (!$SMDefaultComputer) {
-    Write-Error '$SMDefaultComputer is null in the current session and no -ComputerName parameter was passed to this function. Please specify one or the other.' -ErrorAction Stop
-    break
-}
+$SMDefaultComputer = $ComputerName 
 
 # Get the class information from Service Manager
-$Class = Get-SCSMClass | Where-Object { $_.Name -eq $ClassName }
+$Class = Get-SCSMClass -ComputerName $ComputerName | Where-Object { $_.Name -eq $ClassName }
 
 # Check to see if the class exists
 if (!$Class) {
@@ -68,13 +57,66 @@ if (!(Test-Path $FilePath\ExportedAttachments)) {
     New-Item -Path $FilePath -Name "ExportedAttachments" -ItemType "directory"
 }
 
+function Get-FileAttachments {
+    param 
+    ([Guid] $Id)
+    
+    $WIhasAttachMent = "aa8c26dc-3a12-5f88-d9c7-753e5a8a55b4"
+    $CIhasAttachMent = "095ebf2a-ee83-b956-7176-ab09eded6784"
+ 
+    # Get Enterprise Management Object
+    $Emo = Get-SCSMObject -Id $Id -ComputerName $ComputerName
+ 
+    # Check if this is a Work Item or a Configuration Item to make sure we use the correct relationship
+    $WIhasAttachMentClass = Get-SCSMRelationshipClass -Id $WIhasAttachMent -ComputerName $ComputerName
+    $WIClass = Get-SCSMClass System.WorkItem$ -ComputerName $ComputerName
+
+    if ($Emo.IsInstanceOf($WIClass)) {
+        $files = Get-SCSMRelatedObject -SMObject $Emo -Relationship $WIhasAttachMentClass -ComputerName $ComputerName
+    }
+    else {
+        $CIhasAttachMentClass = Get-SCSMRelationshipClass -Id $CIhasAttachMent -ComputerName $ComputerName
+        $CIClass = Get-SCSMClass System.ConfigItem$ -ComputerName $ComputerName
+        if ($Emo.IsInstanceOf($CIClass)) {
+            $files = Get-SCSMRelatedObject -SMObject $Emo -Relationship $CIhasAttachMentClass -ComputerName $ComputerName
+        }
+        else {
+            Write-Error "The Class type $Class is not supported" -ErrorAction Stop
+        }
+    }
+ 
+    # For each file, archive to folder named with the ID of the class instance
+    if (!$files) {
+        $nArchivePath = $FilePath + "\ExportedAttachments\" + $Emo.Id
+        New-Item -Path ($nArchivePath) -ItemType "directory" -Force | Out-Null
+ 
+        foreach ($file in $files) {
+            Try {
+                $file.DisplayName
+                $fs = [IO.File]::OpenWrite(($nArchivePath + "\" + $file.DisplayName))
+                $memoryStream = New-Object IO.MemoryStream
+                $buffer = New-Object byte[] 8192
+                [int]$bytesRead | Out-Null
+                while (($bytesRead = $_.Content.Read($buffer, 0, $buffer.Length)) -gt 0) {
+                    $memoryStream.Write($buffer, 0, $bytesRead)
+                }        
+                $memoryStream.WriteTo($fs)
+            }
+            Finally {
+                $fs.Close()
+                $memoryStream.Close()
+            }
+        }
+    }
+}
+
 # Create Hashtables to store CSV column names and values
 $csvColumns = @{}
 $csvRelColumns = @{}
 
 # Get relationship types for the class we are working with
 foreach ($baseType in $class.GetBaseTypes()) {
-    $classRelationships = (Get-SCSMRelationship -Source $baseType).Name
+    $classRelationships = (Get-SCSMRelationship -ComputerName $ComputerName -Source $baseType).Name
     # Add each relionship type to the csvRelColumns hashtable
     foreach ($classRelationship in $classRelationships) {
         $csvRelColumns[$classRelationship] = ""
@@ -107,12 +149,8 @@ $classProperties = $classProperties.Name
 # Get class instance and related item property values and output to a CSV file. Export any attachments to a subdirectory called ExportedAttachments
 foreach ($classInstance in $classInstances) {
     $relationshipDetails = Get-SCSMRelationshipObject -BySource $classInstance
-    Try {
-        & $filePath\Get-FileAttachments.ps1 -Id $classInstance.Get_Id() -ArchiveRootPath $FilePath\ExportedAttachments -ComputerName $smdefaultcomputer
-    }
-    Catch [System.Management.Automation.CommandNotFoundException] {
-        Write-Host -ForegroundColor Red "ERROR: The Get-FileAttachments script could not be found. Please check the script file is in the same location as the Export-ClassInstances script and try again." 
-    }
+    Get-FileAttachments -Id $classInstance.Get_Id()
+
     foreach ($Property in $classProperties) {
         $csvColumns[$Property] = $classInstance.$Property
     }
