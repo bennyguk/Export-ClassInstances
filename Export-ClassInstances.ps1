@@ -39,7 +39,13 @@ Import-Module $SMPSModule
 $SMDefaultComputer = $ComputerName 
 
 # Get the class information from Service Manager
-$Class = Get-SCSMClass -ComputerName $ComputerName | Where-Object { $_.Name -eq $ClassName }
+try {
+    $Class = Get-SCSMClass -ComputerName $ComputerName | Where-Object { $_.Name -eq $ClassName }
+}
+catch {
+    Write-Host -ForegroundColor Red "Cannot connect to $ComputerName. Please check the hostname and try again."
+    Exit
+}
 
 # Check to see if the class exists
 if (!$Class) {
@@ -54,40 +60,32 @@ If (!(Test-Path $FilePath)) {
 }
 # Create an ExportedAttachements directory if it does not exist
 if (!(Test-Path $FilePath\ExportedAttachments)) {
-    New-Item -Path $FilePath -Name "ExportedAttachments" -ItemType "directory"
+    New-Item -Path $FilePath -Name "ExportedAttachments" -ItemType "directory" | Out-Null
 }
 
 function Get-FileAttachments {
     param 
     ([Guid] $Id)
-    
-    $WIhasAttachMent = "aa8c26dc-3a12-5f88-d9c7-753e5a8a55b4"
-    $CIhasAttachMent = "095ebf2a-ee83-b956-7176-ab09eded6784"
  
-    # Get Enterprise Management Object
-    $Emo = Get-SCSMObject -Id $Id -ComputerName $ComputerName
- 
-    # Check if this is a Work Item or a Configuration Item to make sure we use the correct relationship
-    $WIhasAttachMentClass = Get-SCSMRelationshipClass -Id $WIhasAttachMent -ComputerName $ComputerName
-    $WIClass = Get-SCSMClass System.WorkItem$ -ComputerName $ComputerName
+    # Get the instance of the class
+    $emo = Get-SCSMObject -Id $Id -ComputerName $ComputerName
 
-    if ($Emo.IsInstanceOf($WIClass)) {
-        $files = Get-SCSMRelatedObject -SMObject $Emo -Relationship $WIhasAttachMentClass -ComputerName $ComputerName
+    # Check if this is a Work Item or a Configuration Item to make sure we use the correct relationship
+    if ($emo.IsInstanceOf((Get-SCSMClass System.WorkItem$ -ComputerName $ComputerName))) {
+        $files = Get-SCSMRelatedObject -SMObject $emo -Relationship (Get-SCSMRelationshipClass -Id "aa8c26dc-3a12-5f88-d9c7-753e5a8a55b4" -ComputerName $ComputerName) -ComputerName $ComputerName
     }
     else {
-        $CIhasAttachMentClass = Get-SCSMRelationshipClass -Id $CIhasAttachMent -ComputerName $ComputerName
-        $CIClass = Get-SCSMClass System.ConfigItem$ -ComputerName $ComputerName
-        if ($Emo.IsInstanceOf($CIClass)) {
-            $files = Get-SCSMRelatedObject -SMObject $Emo -Relationship $CIhasAttachMentClass -ComputerName $ComputerName
+        if ($emo.IsInstanceOf((Get-SCSMClass System.ConfigItem$ -ComputerName $ComputerName))) {
+            $files = Get-SCSMRelatedObject -SMObject $emo -Relationship (Get-SCSMRelationshipClass -Id "095ebf2a-ee83-b956-7176-ab09eded6784" -ComputerName $ComputerName) -ComputerName $ComputerName
         }
         else {
-            Write-Error "The Class type $Class is not supported" -ErrorAction Stop
+            Write-Error "The Class $Class is not supported" -ErrorAction Stop
         }
     }
  
     # For each file, archive to folder named with the ID of the class instance
-    if (!$files) {
-        $nArchivePath = $FilePath + "\ExportedAttachments\" + $Emo.Id
+    if ($files) {
+        $nArchivePath = $FilePath + "\ExportedAttachments\" + $emo.Id
         New-Item -Path ($nArchivePath) -ItemType "directory" -Force | Out-Null
  
         foreach ($file in $files) {
@@ -96,8 +94,7 @@ function Get-FileAttachments {
                 $fs = [IO.File]::OpenWrite(($nArchivePath + "\" + $file.DisplayName))
                 $memoryStream = New-Object IO.MemoryStream
                 $buffer = New-Object byte[] 8192
-                [int]$bytesRead | Out-Null
-                while (($bytesRead = $_.Content.Read($buffer, 0, $buffer.Length)) -gt 0) {
+                while (([int]$bytesRead = $file.Content.Read($buffer, 0, $buffer.Length)) -gt 0) {
                     $memoryStream.Write($buffer, 0, $bytesRead)
                 }        
                 $memoryStream.WriteTo($fs)
