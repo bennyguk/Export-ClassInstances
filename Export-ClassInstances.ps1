@@ -61,8 +61,8 @@ function Get-FileAttachments {
     param 
     ([Guid] $Id)
     
-    $WIhasAttachMent = "aa8c26dc-3a12-5f88-d9c7-753e5a8a55b4"
-    $CIhasAttachMent = "095ebf2a-ee83-b956-7176-ab09eded6784"
+    $WIhasAttachment = "aa8c26dc-3a12-5f88-d9c7-753e5a8a55b4"
+    $CIhasAttachment = "095ebf2a-ee83-b956-7176-ab09eded6784"
  
     # Get Enterprise Management Object
     $Emo = Get-SCSMObject -Id $Id -ComputerName $ComputerName
