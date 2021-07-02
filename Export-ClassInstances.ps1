@@ -54,7 +54,7 @@ If (!(Test-Path $FilePath)) {
 }
 # Create an ExportedAttachements directory if it does not exist
 if (!(Test-Path $FilePath\ExportedAttachments)) {
-    New-Item -Path $FilePath -Name "ExportedAttachments" -ItemType "directory"
+    New-Item -Path $FilePath -Name "ExportedAttachments" -ItemType "directory" > $null
 }
 
 function Get-FileAttachments {
