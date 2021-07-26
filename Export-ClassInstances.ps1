@@ -2,7 +2,7 @@
 .SYNOPSIS
     A script to export System Center Service Manager class instance properties, relationships and file attachments of Work Item or Configuration Item based classes.
 .DESCRIPTION
-    This script could be usful if you need to export class instances in bulk for archival purposes, or if you need to make changes to a custom class
+    This script could be useful if you need to export class instances in bulk for archival purposes, or if you need to make changes to a custom class
     that are not upgrade compatible for later import with Import-ClassInstances.ps1 (https://github.com/bennyguk/Import-ClassInstances).
     
     For more information, please see https://github.com/bennyguk/Export-ClassInstances
@@ -56,7 +56,7 @@ function Get-FileAttachments {
     param 
     ([Guid] $Id)
     
-    # Attachment relationship Ids for WorkItems and Configuration Items
+    # Attachment relationship IDs for Work Items and Configuration Items
     $WIhasAttachment = "aa8c26dc-3a12-5f88-d9c7-753e5a8a55b4"
     $CIhasAttachment = "095ebf2a-ee83-b956-7176-ab09eded6784"
  
@@ -100,7 +100,7 @@ function Get-FileAttachments {
                 $memoryStream.WriteTo($fs)
             }
             catch {
-                Write-Host ("An error has occured exporting a file attach,ent. The error message was:") -ForegroundColor Red
+                Write-Host ("An error has occurred exporting a file attachment. The error message was:") -ForegroundColor Red
                 Write-Host $_ -ForegroundColor Red
                 Exit
             }
@@ -112,7 +112,7 @@ function Get-FileAttachments {
     }
 }
 
-# Create Hashtables to temporarily store CSV column names and values
+# Create hash tables to temporarily store CSV column names and values
 $csvColumns = @{}
 $csvRelColumns = @{}
 
@@ -120,7 +120,7 @@ $csvRelColumns = @{}
 foreach ($baseType in $class.GetBaseTypes()) {
     $classRelationships = (Get-SCRelationship -ComputerName $ComputerName -Source $baseType).Name
 
-    # Add each relionship type to the csvRelColumns hashtable
+    # Add each relionship type to the csvRelColumns hash table
     foreach ($classRelationship in $classRelationships) {
         $csvRelColumns[$classRelationship] = ""
     }  
@@ -186,7 +186,7 @@ foreach ($classInstance in $classInstances) {
         $outputCSV | Export-csv $FilePath\$fileName -NoTypeInformation -Append
     }
     catch {
-        Write-Host ("An error has occured exporting data. The error message was:") -ForegroundColor Red
+        Write-Host ("An error has occurred exporting data. The error message was:") -ForegroundColor Red
         Write-Host $_ -ForegroundColor Red
         Exit
     } 
@@ -203,7 +203,7 @@ foreach ($classInstance in $classInstances) {
         $outputRelCSV | Export-csv $FilePath\$relFileName -NoTypeInformation -Append
     }
     catch {
-        Write-Host ("An error has occured exporting data. The error message was:") -ForegroundColor Red
+        Write-Host ("An error has occurred exporting data. The error message was:") -ForegroundColor Red
         Write-Host $_ -ForegroundColor Red
         Exit
     }
