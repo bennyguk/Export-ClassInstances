@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    A script to export class instance properties (work item or configuration item based classes), all relationships and file attachments to CSV file.
+    A script to export System Center Service Manager class instance properties, relationships and file attachments of Work Item or Configuration Item based classes.
 .DESCRIPTION
     This script could be usful if you need to export class instances in bulk for archival purposes, or if you need to make changes to a custom class
     that are not upgrade compatible for later import with Import-ClassInstances.ps1 (https://github.com/bennyguk/Import-ClassInstances).
@@ -35,7 +35,7 @@ $SMPSModule = $GetInstallDirectory.InstallDirectory + "Powershell\System.Center.
 
 Import-Module $SMPSModule
 
-#Set SMDefaultComputer
+#Set the SMDefaultComputerparameter for SMlets
 $SMDefaultComputer = $ComputerName 
 
 # Get the class information from Service Manager
@@ -54,15 +54,15 @@ If (!(Test-Path $FilePath)) {
 }
 # Create an ExportedAttachements directory if it does not exist
 if (!(Test-Path $FilePath\ExportedAttachments)) {
-    New-Item -Path $FilePath -Name "ExportedAttachments" -ItemType "directory" > $null
+    New-Item -Path $FilePath -Name "ExportedAttachments" -ItemType "directory"
 }
 
 function Get-FileAttachments {
     param 
     ([Guid] $Id)
     
-    $WIhasAttachment = "aa8c26dc-3a12-5f88-d9c7-753e5a8a55b4"
-    $CIhasAttachment = "095ebf2a-ee83-b956-7176-ab09eded6784"
+    $WIhasAttachMent = "aa8c26dc-3a12-5f88-d9c7-753e5a8a55b4"
+    $CIhasAttachMent = "095ebf2a-ee83-b956-7176-ab09eded6784"
  
     # Get Enterprise Management Object
     $Emo = Get-SCSMObject -Id $Id -ComputerName $ComputerName
