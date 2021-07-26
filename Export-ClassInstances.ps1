@@ -141,9 +141,8 @@ else {
 # Collect the property names for the class and add to an array.
 $classProperties = @()
 foreach ($property in @($Class) + @($Class.GetBaseTypes())) {
-    $classProperties += $property.PropertyCollection
+    $classProperties += $property.PropertyCollection.Name
 }
-$classProperties = $classProperties.Name
 
 # Get class instance property values and relationship information. Export any attachments to a subdirectory called ExportedAttachments
 $counter = 0
