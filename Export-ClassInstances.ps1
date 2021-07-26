@@ -7,15 +7,15 @@
     
     For more information, please see https://github.com/bennyguk/Export-ClassInstances
 .PARAMETER ClassName
-    Specifies the class name you wish to work with.
+    Specifies the class name to work with.
 .PARAMETER FilePath
-    Specifies the path to the folder you wish to export file attachments and CSV file to.
+    Specifies the path to the folder to export file attachments and CSV file to.
 .PARAMETER FileName
     Specifies name of the CSV file - Will default to Export.csv
 .PARAMETER ComputerName
     Specifies the SCSM server to connect to.
 .PARAMETER IncludePendingDelete
-    Will include class instances that have been deleted in the export.
+    Will include class instances that are pending deletion in the export.
     
 .EXAMPLE
     Export-ClassInstances.ps1 -ClassName MyClass -FilePath c:\MyClassExport -FileName MyClassExport.csv -ComputerName MySCSMServer -IncludePendingDelete
